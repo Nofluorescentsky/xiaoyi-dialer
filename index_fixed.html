@@ -1,0 +1,93 @@
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>小一 · TRTC 拨号器（修正版）</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body { font-family: sans-serif; padding: 20px; background: #f5f5f5; }
+    h1 { text-align: center; }
+    .group { margin: 10px 0; }
+    input { width: 100%; padding: 8px; box-sizing: border-box; }
+    button { width: 100%; margin-top: 10px; padding: 10px; background: #0066ff; color: #fff; border: none; }
+    #log { margin-top: 20px; padding: 10px; background: #fff; height: 150px; overflow-y: auto; white-space: pre-wrap; }
+  </style>
+</head>
+<body>
+  <h1>小一 · TRTC 拨号器（修正版）</h1>
+
+  <div class="group">
+    <label>SDKAppID</label>
+    <input id="sdkappid" value="1600096672">
+  </div>
+  <div class="group">
+    <label>UserSig</label>
+    <input id="usersig" value="8c7b53c38ab10c025c2c5236130f9809aaafc4240d3463ee41d0288c6b183147">
+  </div>
+  <div class="group">
+    <label>房间号</label>
+    <input id="roomid" value="1001">
+  </div>
+  <div class="group">
+    <label>用户ID</label>
+    <input id="userid" value="xiaoyi">
+  </div>
+  <div class="group">
+    <label>电话号码（PSTN 拨号）</label>
+    <input id="phonenumber" value="13800138000">
+  </div>
+
+  <button id="joinBtn">加入语音房间</button>
+  <button id="callBtn">拨打电话</button>
+
+  <div id="log"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/trtc-js-sdk@latest/index.min.js"></script>
+  <script>
+    const logEl = document.getElementById('log');
+    function log(msg) {
+      logEl.textContent += msg + "\n";
+      logEl.scrollTop = logEl.scrollHeight;
+    }
+
+    let client = null;
+
+    document.getElementById('joinBtn').onclick = async () => {
+      const sdkAppId = parseInt(document.getElementById('sdkappid').value);
+      const userSig  = document.getElementById('usersig').value.trim();
+      const userId   = document.getElementById('userid').value.trim();
+      const roomId   = parseInt(document.getElementById('roomid').value);
+
+      if (!sdkAppId || !userSig || !userId || !roomId) {
+        return alert('请填写 SDKAppID、UserSig、用户ID、房间号');
+      }
+
+      try {
+        client = TRTC.createClient({ mode: 'rtc', sdkAppId, userId, userSig });
+        await client.join({ roomId });
+        log(`✅ 已加入房间 ${roomId}`);
+      } catch (e) {
+        log(`❌ 加入房间失败：${e.message}`);
+      }
+    };
+
+    document.getElementById('callBtn').onclick = async () => {
+      if (!client) {
+        return alert('请先加入语音房间');
+      }
+      const phone = document.getElementById('phonenumber').value.trim();
+      if (!phone) {
+        return alert('请填写要拨打的电话号码');
+      }
+
+      try {
+        await client.call({ type: 'pstn', callee: phone, country: '86' });
+        log(`📞 正在拨打 ${phone}`);
+      } catch (e) {
+        log(`❌ 拨号失败：${e.message}`);
+      }
+    };
+  </script>
+</body>
+</html>
